@@ -12,10 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { Ticket } from '@prisma/client';
 
 type TicketFormData = z.infer<typeof ticketSchema>;
 
-function TicketForm() {
+interface Props {
+    ticket?: Ticket
+}
+
+function TicketForm({ ticket }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
@@ -31,8 +36,13 @@ function TicketForm() {
             setIsSubmitting(true);
             setError("");
 
-            await axios.post("/api/tickets", values);
+            if (ticket) {
+                await axios.patch(`/api/tickets/${ticket.id}`, values);
 
+            } else {
+                await axios.post("/api/tickets", values);
+
+            }
             setIsSubmitting(true);
             router.push("/tickets")
             router.refresh();
@@ -50,7 +60,7 @@ function TicketForm() {
                         <FormItem>
                             <FormLabel>Ticket Title</FormLabel>
                             <FormControl>
-                                <Input placeholder="Ticket Title..." {...field} />
+                                <Input placeholder="Ticket Title..." {...field} defaultValue={ticket?.title} />
                             </FormControl>
                         </FormItem>
                     )} />
@@ -60,6 +70,7 @@ function TicketForm() {
                             <Controller
                                 name="description"
                                 control={form.control}
+                                defaultValue={ticket?.description}
                                 render={({ field }) => (
                                     <SimpleMDE {...field} />
                                 )}
@@ -71,7 +82,7 @@ function TicketForm() {
                             <FormItem>
                                 <FormLabel>Status</FormLabel>
                                 <FormControl>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={ticket ? ticket?.status : field.value} >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Status..." />
                                         </SelectTrigger>
@@ -88,21 +99,21 @@ function TicketForm() {
                             <FormItem>
                                 <FormLabel>Priority</FormLabel>
                                 <FormControl>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={ticket ? ticket?.priority : field.value}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Priority..." />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="OPEN">Low</SelectItem>
                                             <SelectItem value="MEDIUM">Medium</SelectItem>
-                                            <SelectItem value="HIGH">Hight</SelectItem>
+                                            <SelectItem value="HIGH">High</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </FormControl>
                             </FormItem>
                         )} />
                     </div>
-                    <Button type='submit' disabled={isSubmitting}>Submit</Button>
+                    <Button type='submit' disabled={isSubmitting}>{ticket ? "Update Ticket" : "Create Ticket"}</Button>
                 </form>
             </Form>
         </div>
