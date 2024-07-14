@@ -13,11 +13,13 @@ async function ViewTicket({ params }: Props) {
         where: { id: parseInt(params.id) },
     })
 
+    const users = await prisma.user.findMany();
+
     if (!ticket) {
         return <p className='text-destructive'>Ticket Not Found!</p>
     }
     return (
-        <TicketDetail ticket={ticket} />
+        <TicketDetail ticket={ticket} users={users}/>
     )
 }
 
